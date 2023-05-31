@@ -3,6 +3,7 @@ package com.battlesheep.stc.controllers;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.battlesheep.stc.game.Constants;
 import com.battlesheep.stc.game.Orbiting;
@@ -100,8 +101,8 @@ public class GUIController {
             double r = Constants.RADIUS_EARTH / pixelScale;
             double d = (360f * i / numLongLines) + (360f * game.getEarthTime() / Constants.EARTH_DAY_LENGTH);
             double a = Math.toRadians(d);
-            shapeRenderer.line((float) Constants.polarToCartesian(r, a)[0],
-                    (float) Constants.polarToCartesian(r, a)[1],
+            shapeRenderer.line((float) Constants.PolarToCartesian(r, a)[0],
+                    (float) Constants.PolarToCartesian(r, a)[1],
                     0,
                     0);
         }
@@ -119,7 +120,10 @@ public class GUIController {
             drawOrbit(o, circleSegments);
             drawShip(o);
             drawMinDistance(o);
-            drawLabels(o);
+            if (o.isSelected()) {
+                drawLabels(o);
+                drawVelocityVectors(o);
+            }
         }
         shapeRenderer.end();
         degreeTest += 1;
@@ -141,7 +145,7 @@ public class GUIController {
         double b = Math.sqrt(apogee * perigee); // semi-minor axis
         double e = Math.sqrt(1 - (Math.pow(b, 2) / Math.pow(a, 2))); // eccentricity
         double r = radiusFromFoci(a, e, v);
-        double[] p = Constants.polarToCartesian(r, Math.toRadians(v) + Math.toRadians(w));
+        double[] p = Constants.PolarToCartesian(r, Math.toRadians(v) + Math.toRadians(w));
         return p;
     }
 
@@ -179,7 +183,7 @@ public class GUIController {
     }
 
     private void drawLabels(Orbiting o) {
-        if (o.isSelected() && o.getPeriapsis() != o.getApoapsis()) {
+        if (o.getPeriapsis() != o.getApoapsis()) {
             double w = o.getW();
             double ap = o.getApoapsis();
             double pe = o.getPeriapsis();
@@ -190,6 +194,21 @@ public class GUIController {
             shapeRenderer.setColor(Color.BLUE);
             shapeRenderer.circle((float) apPos[0] / pixelScale, (float) apPos[1] / pixelScale, labelSize * camera.zoom);
         }
+    }
+
+    private void drawVelocityVectors(Orbiting o) {
+        Vector2 velocityVector = o.getVelocityVector();
+        double velocityX = velocityVector.x;
+        double velocityY = velocityVector.y;
+        double xPos = o.getXPos();
+        double yPos = o.getYPos();
+        float vectorScale = 100;
+        shapeRenderer.setColor(Color.RED);
+        shapeRenderer.line((float) xPos / pixelScale, (float) yPos / pixelScale, (float) (xPos + velocityX * vectorScale) / pixelScale, (float) (yPos) / pixelScale);
+        shapeRenderer.setColor((Color.BLUE));
+        shapeRenderer.line((float) xPos / pixelScale, (float) yPos / pixelScale, (float) (xPos) / pixelScale, (float) (yPos + velocityY * vectorScale) / pixelScale);
+        shapeRenderer.setColor(Color.YELLOW);
+        shapeRenderer.line((float) xPos / pixelScale, (float) yPos / pixelScale, (float) (xPos + velocityX * vectorScale) / pixelScale, (float) (yPos + velocityY * vectorScale) / pixelScale);
     }
 
     private double radiusFromFoci(double a, double e, double theta) {

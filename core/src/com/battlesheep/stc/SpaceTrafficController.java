@@ -45,9 +45,9 @@ public class SpaceTrafficController extends ApplicationAdapter {
 //		gameController.addOrbiting(o1);
 //		gameController.addOrbiting(o2);
 		Random rand = new Random();
-		int upper = 20000000;
+		int upper = 15000000;
 		int lower = 100000;
-		int n = 10000;
+		int n = 100;
 		for(int i = 0; i < n; i++) {
 			int ap = rand.nextInt(upper - lower) + lower;
 			int pe = rand.nextInt(upper - lower) + lower;

@@ -31,13 +31,13 @@ public class GameController {
 
     private GameController() {
         stepCounter = 0;
-        timeStep = 0.01f;
+        timeStep = 0.001f;
         lastUpdate = 0;
 
         shipMinDistance = 100e3; // 10km
 
         earthTime = 0;
-        earthTimeStep = 10;
+        earthTimeStep = 1;
 
         orbiting = new ArrayList<Orbiting>();
 

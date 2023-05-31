@@ -1,5 +1,7 @@
 package com.battlesheep.stc.game;
 
+import com.badlogic.gdx.math.Vector2;
+
 public class Orbiting {
 
     // positional data
@@ -28,6 +30,25 @@ public class Orbiting {
         }
         // eccentricity
     }
+
+//    public void addDeltaVTangent(double dv) {
+//        double r = radiusFromFoci(getSemiMajorAxis(), getEccentricity(), v);
+//        Vector2 rVector = new Vector2((float) Constants.polarToCartesian(r, v)[0], (float) Constants.polarToCartesian(r, v)[1]);
+//        double E = Math.atan((Math.sqrt(1 - Math.pow(getEccentricity(), 2)) * Math.sin(Math.toRadians(v))) / (1 + getEccentricity() * Math.cos(v)));
+//        double velocity = getVelocity() + dv;
+//        Vector2 vVector = new Vector2((float) (velocity * getSemiMajorAxis() * Math.cos(E)), (float) (velocity * getSemiMinorAxis() * Math.sin(E)));
+//        float h = rVector.crs(vVector);
+//        double u = Constants.M_EARTH * Constants.G;
+//        double a = u / ((2 * u / r) - Math.pow(dv, 2));
+//        double e = Math.sqrt(1 - (Math.pow(h, 2) / (a * u)));
+//        double apogee = a * (1 + e);
+//        double perigee = a * (1 - e);
+//        double ap = apogee - Constants.RADIUS_EARTH;
+//        double pe = perigee - Constants.RADIUS_EARTH;
+//
+//        this.apoapsis = ap;
+//        this.periapsis = pe;
+//    }
 
     public double getApoapsis() {
         return apoapsis;
@@ -65,12 +86,17 @@ public class Orbiting {
         return Math.sqrt(1 - (Math.pow(getSemiMinorAxis(), 2) / Math.pow(getSemiMajorAxis(), 2)));
     }
 
+    public double getVelocity() {
+        double r = radiusFromFoci(getSemiMajorAxis(), getEccentricity(), v);
+        return Math.sqrt((Constants.G * Constants.M_EARTH) * ((2 / r) - (1 / getSemiMajorAxis())));
+    }
+
     public double getXPos() {
-        return Constants.polarToCartesian(radiusFromFoci(getSemiMajorAxis(), getEccentricity(), v), Math.toRadians(v + w))[0];
+        return Constants.PolarToCartesian(radiusFromFoci(getSemiMajorAxis(), getEccentricity(), v), Math.toRadians(v + w))[0];
     }
 
     public double getYPos() {
-        return Constants.polarToCartesian(radiusFromFoci(getSemiMajorAxis(), getEccentricity(), v), Math.toRadians(v + w))[1];
+        return Constants.PolarToCartesian(radiusFromFoci(getSemiMajorAxis(), getEccentricity(), v), Math.toRadians(v + w))[1];
     }
 
     public double getDelta(double time) {
@@ -84,8 +110,28 @@ public class Orbiting {
         return Math.toDegrees(delta);
     }
 
+    public Vector2 getVelocityVector() {
+        Vector2 v = new Vector2((float) getVelocityX(), (float) getVelocityY());
+        v.rotateDeg((float)w);
+        return v;
+    }
+
     private double radiusFromFoci(double a, double e, double theta) {
         return (a * (1 - Math.pow(e, 2))) / (1 + e * Math.cos(Math.toRadians(theta)));
+    }
+
+    // get velocity x in the perifocal frame
+    // https://physics.stackexchange.com/questions/669946/how-to-calculate-the-direction-of-the-velocity-vector-for-a-body-that-moving-is
+    private double getVelocityX() {
+        double e = getEccentricity();
+        return getVelocity() * (0 - Math.sin(Math.toRadians(v))) / (Math.sqrt(1 + Math.pow(e, 2) + 2 * e * Math.cos(Math.toRadians(v))));
+    }
+
+    // get velocity y in the perifocal frame
+    // https://physics.stackexchange.com/questions/669946/how-to-calculate-the-direction-of-the-velocity-vector-for-a-body-that-moving-is
+    private double getVelocityY() {
+        double e = getEccentricity();
+        return getVelocity() * (e + Math.cos(Math.toRadians(v))) / (Math.sqrt(1 + Math.pow(e, 2) + 2 * e * Math.cos(Math.toRadians(v))));
     }
 
     public boolean isSelected() {
