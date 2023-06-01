@@ -7,6 +7,7 @@ import com.battlesheep.stc.controllers.GUIController;
 import com.battlesheep.stc.controllers.GameController;
 import com.battlesheep.stc.controllers.InputController;
 import com.battlesheep.stc.game.Orbiting;
+import com.battlesheep.stc.game.Ship;
 
 import java.util.Random;
 
@@ -47,14 +48,14 @@ public class SpaceTrafficController extends ApplicationAdapter {
 		Random rand = new Random();
 		int upper = 15000000;
 		int lower = 100000;
-		int n = 100;
+		int n = 500;
 		for(int i = 0; i < n; i++) {
 			int ap = rand.nextInt(upper - lower) + lower;
 			int pe = rand.nextInt(upper - lower) + lower;
 			int v = rand.nextInt(359);
 			int w = rand.nextInt(359);
-			Orbiting o = new Orbiting(ap, pe, v, w);
-			game.addOrbiting(o);
+			Ship s = new Ship(ap, pe, v, w);
+			game.addOrbiting(s);
 		}
 	}
 }

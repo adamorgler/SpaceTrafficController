@@ -67,11 +67,11 @@ public class Orbiting {
     }
 
     public double getApogee() {
-        return apoapsis + Constants.RADIUS_EARTH;
+        return apoapsis + Constants.getRadiusCentralBody();
     }
 
     public double getPerigee() {
-        return periapsis + Constants.RADIUS_EARTH;
+        return periapsis + Constants.getRadiusCentralBody();
     }
 
     public double getSemiMajorAxis() {
@@ -88,15 +88,15 @@ public class Orbiting {
 
     public double getVelocity() {
         double r = radiusFromFoci(getSemiMajorAxis(), getEccentricity(), v);
-        return Math.sqrt((Constants.G * Constants.M_EARTH) * ((2 / r) - (1 / getSemiMajorAxis())));
+        return Math.sqrt((Constants.G * Constants.getMassCentralBody()) * ((2 / r) - (1 / getSemiMajorAxis())));
     }
 
     public double getXPos() {
-        return Constants.PolarToCartesian(radiusFromFoci(getSemiMajorAxis(), getEccentricity(), v), Math.toRadians(v + w))[0];
+        return Constants.polarToCartesian(radiusFromFoci(getSemiMajorAxis(), getEccentricity(), v), Math.toRadians(v + w))[0];
     }
 
     public double getYPos() {
-        return Constants.PolarToCartesian(radiusFromFoci(getSemiMajorAxis(), getEccentricity(), v), Math.toRadians(v + w))[1];
+        return Constants.polarToCartesian(radiusFromFoci(getSemiMajorAxis(), getEccentricity(), v), Math.toRadians(v + w))[1];
     }
 
     public double getDelta(double time) {
@@ -105,7 +105,7 @@ public class Orbiting {
         double e = getEccentricity();
         double r = radiusFromFoci(a, e, v);
         //double T = 2 * Math.PI * Math.sqrt(Math.pow(a, 3) / (Constants.G * Constants.M_EARTH));
-        double n = 1 / Math.sqrt(Math.pow(a, 3) / (Constants.G * Constants.M_EARTH));
+        double n = 1 / Math.sqrt(Math.pow(a, 3) / (Constants.G * Constants.getMassCentralBody()));
         double delta = (a * b * n * time) / Math.pow(r, 2);
         return Math.toDegrees(delta);
     }
@@ -114,6 +114,12 @@ public class Orbiting {
         Vector2 v = new Vector2((float) getVelocityX(), (float) getVelocityY());
         v.rotateDeg((float)w);
         return v;
+    }
+
+    public double getAltitudeAboveSeaLevel() {
+        double a = getSemiMajorAxis();
+        double e = getEccentricity();
+        return radiusFromFoci(a, e, v) - Constants.getRadiusCentralBody();
     }
 
     private double radiusFromFoci(double a, double e, double theta) {

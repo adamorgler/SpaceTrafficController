@@ -63,7 +63,7 @@ public class InputController implements InputProcessor {
                 double xPos = o.getXPos() / gui.getPixelScale();
                 double yPos = o.getYPos() / gui.getPixelScale();
                 //System.out.println("Ship pos: x: " + xPos + " y: " + yPos);
-                double distance = Constants.DistanceBetween(xPos, yPos, cursorPos.x, cursorPos.y);
+                double distance = Constants.distanceBetween(xPos, yPos, cursorPos.x, cursorPos.y);
                 if (distance < game.getShipMinDistance() / gui.getPixelScale() && !selected) {
                     selected = true;
                     o.setSelected(selected);

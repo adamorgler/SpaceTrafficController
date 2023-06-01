@@ -7,6 +7,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.battlesheep.stc.game.Constants;
 import com.battlesheep.stc.game.Orbiting;
+import com.battlesheep.stc.game.Ship;
 
 public class GUIController {
 
@@ -39,7 +40,7 @@ public class GUIController {
         circleSegments = 128;
         shipSize = 3;
         labelSize = 5;
-        selectionSize = (int) game.getShipMinDistance() / pixelScale + 5;
+        selectionSize = (int) game.getShipMinDistance() / 2 / pixelScale + 5;
     }
 
     public static GUIController getInstance() {
@@ -58,14 +59,22 @@ public class GUIController {
 
         camera.viewportWidth = Gdx.graphics.getWidth();
         camera.viewportHeight = Gdx.graphics.getHeight();
-        camera.setxBound((float) ((2 * Constants.RADIUS_EARTH + cameraBound) / pixelScale));
-        camera.setyBound((float) ((2 * Constants.RADIUS_EARTH + cameraBound) / pixelScale));
+        camera.setxBound((float) ((2 * Constants.getRadiusCentralBody() + cameraBound) / pixelScale));
+        camera.setyBound((float) ((2 * Constants.getRadiusCentralBody() + cameraBound) / pixelScale));
         //camera.updatePosition();
         camera.update();
         shapeRenderer.setProjectionMatrix(camera.combined);
 
-        renderEarth();
+        renderCentralBody();
         renderOrbiters();
+    }
+
+    private void renderCentralBody() {
+        switch(game.getCentralBody()) {
+            case EARTH:
+                renderEarth();
+                break;
+        }
     }
 
     private void renderEarth() {
@@ -73,23 +82,23 @@ public class GUIController {
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
         // Atmosphere
         shapeRenderer.setColor(Color.SKY);
-        shapeRenderer.circle(0,0, (int)(Constants.RADIUS_EARTH + Constants.EARTH_ATMOSPHERE) / pixelScale, circleSegments);
+        shapeRenderer.circle(0,0, (int)(Constants.getRadiusCentralBody() + Constants.getAtmosphereCentralBody()) / pixelScale, circleSegments);
         // land
         shapeRenderer.setColor(Color.OLIVE);
-        shapeRenderer.circle(0,0,(int)Constants.RADIUS_EARTH / pixelScale, circleSegments);
+        shapeRenderer.circle(0,0,(int)Constants.getRadiusCentralBody() / pixelScale, circleSegments);
         // arctic
         shapeRenderer.setColor(Color.WHITE);
-        shapeRenderer.circle(0,0, (int)(Constants.RADIUS_EARTH / 3) / pixelScale, circleSegments);
+        shapeRenderer.circle(0,0, (int)(Constants.getRadiusCentralBody() / 3) / pixelScale, circleSegments);
         // sun shadow
         shapeRenderer.setColor(new Color(0,0,0,0.5f));
-        shapeRenderer.arc(0,0, (int)(Constants.RADIUS_EARTH + Constants.EARTH_ATMOSPHERE) / pixelScale + 1, 90, 180, circleSegments / 2);
+        shapeRenderer.arc(0,0, (int)(Constants.getRadiusCentralBody() + Constants.getAtmosphereCentralBody()) / pixelScale + 1, 90, 180, circleSegments / 2);
         shapeRenderer.end();
 
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         // latitude lines
         shapeRenderer.setColor(Color.BLACK);
         for(int i = 0; i < numLatLines; i++) {
-            shapeRenderer.circle(0,0, (int)(Constants.RADIUS_EARTH * (i + 1) / numLatLines) / pixelScale, circleSegments);
+            shapeRenderer.circle(0,0, (int)(Constants.getRadiusCentralBody() * (i + 1) / numLatLines) / pixelScale, circleSegments);
         }
         // longitude lines
         for(int i = 0; i < numLongLines; i++) {
@@ -98,11 +107,11 @@ public class GUIController {
             } else {
                 shapeRenderer.setColor(Color.BLACK);
             }
-            double r = Constants.RADIUS_EARTH / pixelScale;
-            double d = (360f * i / numLongLines) + (360f * game.getEarthTime() / Constants.EARTH_DAY_LENGTH);
+            double r = Constants.getRadiusCentralBody() / pixelScale;
+            double d = (360f * i / numLongLines) + (360f * game.getCentralBodyTime() / Constants.getDayLengthCentralBody());
             double a = Math.toRadians(d);
-            shapeRenderer.line((float) Constants.PolarToCartesian(r, a)[0],
-                    (float) Constants.PolarToCartesian(r, a)[1],
+            shapeRenderer.line((float) Constants.polarToCartesian(r, a)[0],
+                    (float) Constants.polarToCartesian(r, a)[1],
                     0,
                     0);
         }
@@ -119,10 +128,14 @@ public class GUIController {
             // https://farside.ph.utexas.edu/teaching/celestial/Celestial/node30.html
             drawOrbit(o, circleSegments);
             drawShip(o);
-            drawMinDistance(o);
+            if (o instanceof Ship) {
+                Ship s = (Ship) o;
+                drawMinDistance(s);
+            }
             if (o.isSelected()) {
-                drawLabels(o);
+                drawApoapsisAndPeriapsis(o);
                 drawVelocityVectors(o);
+                drawSelectionBox(o);
             }
         }
         shapeRenderer.end();
@@ -139,13 +152,13 @@ public class GUIController {
 
     private double[] getOrbitalPosition(double ap, double pe, double v, double w) {
         // https://farside.ph.utexas.edu/teaching/celestial/Celestial/node30.html
-        double apogee = ap + Constants.RADIUS_EARTH;
-        double perigee = pe + Constants.RADIUS_EARTH;
+        double apogee = ap + Constants.getRadiusCentralBody();
+        double perigee = pe + Constants.getRadiusCentralBody();
         double a = (float)(apogee + perigee) / 2; // semi-major axis
         double b = Math.sqrt(apogee * perigee); // semi-minor axis
         double e = Math.sqrt(1 - (Math.pow(b, 2) / Math.pow(a, 2))); // eccentricity
         double r = radiusFromFoci(a, e, v);
-        double[] p = Constants.PolarToCartesian(r, Math.toRadians(v) + Math.toRadians(w));
+        double[] p = Constants.polarToCartesian(r, Math.toRadians(v) + Math.toRadians(w));
         return p;
     }
 
@@ -170,19 +183,26 @@ public class GUIController {
         double[] p = getOrbitalPosition(o);
         shapeRenderer.setColor(Color.CYAN);
         shapeRenderer.rect((float) p[0] / pixelScale - shipSize, (float) p[1] / pixelScale - shipSize, shipSize * 2, shipSize * 2);
-        if (o.isSelected()) {
-            shapeRenderer.setColor(Color.GOLD);
-            shapeRenderer.rect((float) p[0] / pixelScale - (float) selectionSize, (float) p[1] / pixelScale - (float) selectionSize, (float) selectionSize * 2, (float) selectionSize * 2);
-        }
     }
 
-    private void drawMinDistance(Orbiting o) {
+    private void drawSelectionBox(Orbiting o) {
         double[] p = getOrbitalPosition(o);
-        shapeRenderer.setColor(Color.GREEN);
-        shapeRenderer.circle((float) p[0] / pixelScale, (float) p[1] / pixelScale, (float) game.getShipMinDistance() / pixelScale);
+        shapeRenderer.setColor(Color.GOLD);
+        shapeRenderer.rect((float) p[0] / pixelScale - (float) selectionSize, (float) p[1] / pixelScale - (float) selectionSize, (float) selectionSize * 2, (float) selectionSize * 2);
     }
 
-    private void drawLabels(Orbiting o) {
+    private void drawMinDistance(Ship s) {
+        double[] p = getOrbitalPosition(s);
+        if (s.isEncroached()) {
+            shapeRenderer.setColor(Color.RED);
+        }
+        else {
+            shapeRenderer.setColor(Color.GREEN);
+        }
+        shapeRenderer.circle((float) p[0] / pixelScale, (float) p[1] / pixelScale, (float) game.getShipMinDistance() / 2 / pixelScale);
+    }
+
+    private void drawApoapsisAndPeriapsis(Orbiting o) {
         if (o.getPeriapsis() != o.getApoapsis()) {
             double w = o.getW();
             double ap = o.getApoapsis();

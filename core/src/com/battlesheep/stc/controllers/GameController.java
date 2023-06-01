@@ -3,26 +3,31 @@ package com.battlesheep.stc.controllers;
 import com.battlesheep.stc.game.Constants;
 import com.battlesheep.stc.game.Orbiting;
 import com.battlesheep.stc.game.Scenario;
+import com.battlesheep.stc.game.Ship;
 
 import java.util.*;
 
 public class GameController {
 
+    public enum CentralBody {EARTH};
+
     // game information
     private long stepCounter;
-    private float timeStep; // number of seconds to pass for each step.
+    private float timeStep; // number of irl seconds to pass for each step.
     private long lastUpdate; // time of last update
     private Scenario scenario;
 
     // game rules
     private double shipMinDistance; // minimum distance ships must stay apart from one another, meters
 
-    // earth info
-    private int earthTime; // time on earth in-game in seconds
-    private int earthTimeStep; // how much time in-game passes with each game step
+    // planet info
+    private int centralBodyTime; // time on earth in-game in seconds
+    private int centralBodyTimeStep; // how much time in-game passes with each game step
+    private CentralBody centralBody;
 
     // agents
     private ArrayList<Orbiting> orbiting;
+    private ArrayList<Ship> encroachedShips;
 
     // camera
     private CameraController camera;
@@ -31,15 +36,17 @@ public class GameController {
 
     private GameController() {
         stepCounter = 0;
-        timeStep = 0.001f;
+        timeStep = 0.05f;
         lastUpdate = 0;
 
-        shipMinDistance = 100e3; // 10km
+        shipMinDistance = 300e3; // 300km
 
-        earthTime = 0;
-        earthTimeStep = 1;
+        centralBodyTime = 0;
+        centralBodyTimeStep = 1;
+        centralBody = CentralBody.EARTH;
 
         orbiting = new ArrayList<Orbiting>();
+        encroachedShips = new ArrayList<Ship>();
 
         camera = CameraController.getInstance();
     }
@@ -62,29 +69,43 @@ public class GameController {
 
         // step logic
         stepCounter++;
-        iterateEarthTime();
-        for(Orbiting o : orbiting) {
-            o.step(earthTimeStep);
+        iterateCentralBodyTime();
+        for (Ship s : encroachedShips) {
+            s.setEncroached(false);
+        }
+        encroachedShips.clear();
+        sortOrbitsByAltitude();
+        for(int i = 0; i < orbiting.size(); i++) {
+            Orbiting o = orbiting.get(i);
+            o.step(centralBodyTimeStep);
+            if (o instanceof Ship) {
+                Ship s = (Ship) o;
+                encroachedShips.addAll(s.checkIfEncroached(orbiting, i));
+            }
         }
     }
 
-    private void iterateEarthTime() {
-        earthTime += earthTimeStep;
-        if (earthTime > Constants.EARTH_DAY_LENGTH) {
-            earthTime -= Constants.EARTH_DAY_LENGTH;
+    private void sortOrbitsByAltitude() {
+        orbiting.sort(new OrbitAltitudeComparator());
+    }
+
+    private void iterateCentralBodyTime() {
+        centralBodyTime += centralBodyTimeStep;
+        if (centralBodyTime > Constants.getDayLengthCentralBody()) {
+            centralBodyTime -= Constants.getDayLengthCentralBody();
         }
     }
 
-    public int getEarthTime() {
-        return earthTime;
+    public int getCentralBodyTime() {
+        return centralBodyTime;
     }
 
-    public void setEarthTime(int time) {
-        this.earthTime = time;
+    public void setCentralBodyTime(int time) {
+        this.centralBodyTime = time;
     }
 
-    public void setEarthTimeStep(int step) {
-        earthTimeStep = step;
+    public void setCentralBodyTimeStep(int step) {
+        centralBodyTimeStep = step;
     }
 
     public ArrayList<Orbiting> getOrbiting() {
@@ -109,5 +130,24 @@ public class GameController {
 
     public void setScenario(Scenario s) {
         this.scenario = s;
+    }
+
+    public CentralBody getCentralBody() {
+        return centralBody;
+    }
+
+    private class OrbitAltitudeComparator implements Comparator<Orbiting> {
+
+        @Override
+        public int compare(Orbiting o1, Orbiting o2) {
+            double alt1 = o1.getAltitudeAboveSeaLevel();
+            double alt2 = o2.getAltitudeAboveSeaLevel();
+            if (alt1 < alt2) {
+                return -1;
+            } else if (alt1 > alt2) {
+                return 1;
+            }
+            return 0;
+        }
     }
 }
