@@ -2,7 +2,7 @@ package com.battlesheep.stc.game;
 
 import com.badlogic.gdx.math.Vector2;
 
-public class Orbiting {
+public class Orbit {
 
     // positional data
     private double apoapsis; // highest altitude in orbit, meters
@@ -13,7 +13,7 @@ public class Orbiting {
     // game data
     private boolean selected;
 
-    public Orbiting(double apoapsis, double periapsis, double v, double w) {
+    public Orbit(double apoapsis, double periapsis, double v, double w) {
         this.apoapsis = apoapsis;
         this.periapsis = periapsis;
         this.v = v;

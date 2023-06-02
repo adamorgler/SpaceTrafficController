@@ -1,7 +1,7 @@
 package com.battlesheep.stc.controllers;
 
 import com.battlesheep.stc.game.Constants;
-import com.battlesheep.stc.game.Orbiting;
+import com.battlesheep.stc.game.Orbit;
 import com.battlesheep.stc.game.Scenario;
 import com.battlesheep.stc.game.Ship;
 
@@ -26,7 +26,7 @@ public class GameController {
     private CentralBody centralBody;
 
     // agents
-    private ArrayList<Orbiting> orbiting;
+    private ArrayList<Orbit> orbits;
     private ArrayList<Ship> encroachedShips;
 
     // camera
@@ -45,8 +45,8 @@ public class GameController {
         centralBodyTimeStep = 1;
         centralBody = CentralBody.EARTH;
 
-        orbiting = new ArrayList<Orbiting>();
-        encroachedShips = new ArrayList<Ship>();
+        orbits = new ArrayList<>();
+        encroachedShips = new ArrayList<>();
 
         camera = CameraController.getInstance();
     }
@@ -75,18 +75,18 @@ public class GameController {
         }
         encroachedShips.clear();
         sortOrbitsByAltitude();
-        for(int i = 0; i < orbiting.size(); i++) {
-            Orbiting o = orbiting.get(i);
+        for(int i = 0; i < orbits.size(); i++) {
+            Orbit o = orbits.get(i);
             o.step(centralBodyTimeStep);
             if (o instanceof Ship) {
                 Ship s = (Ship) o;
-                encroachedShips.addAll(s.checkIfEncroached(orbiting, i));
+                encroachedShips.addAll(s.checkIfEncroached(orbits, i));
             }
         }
     }
 
     private void sortOrbitsByAltitude() {
-        orbiting.sort(new OrbitAltitudeComparator());
+        orbits.sort(new OrbitAltitudeComparator());
     }
 
     private void iterateCentralBodyTime() {
@@ -108,16 +108,16 @@ public class GameController {
         centralBodyTimeStep = step;
     }
 
-    public ArrayList<Orbiting> getOrbiting() {
-        return orbiting;
+    public ArrayList<Orbit> getOrbiting() {
+        return orbits;
     }
 
-    public void addOrbiting(Orbiting o) {
-        this.orbiting.add(0, o);
+    public void addOrbiting(Orbit o) {
+        this.orbits.add(0, o);
     }
 
-    public void removeOrbiting(Orbiting o) {
-        this.orbiting.remove(o);
+    public void removeOrbiting(Orbit o) {
+        this.orbits.remove(o);
     }
 
     public double getShipMinDistance() {
@@ -136,10 +136,10 @@ public class GameController {
         return centralBody;
     }
 
-    private class OrbitAltitudeComparator implements Comparator<Orbiting> {
+    private class OrbitAltitudeComparator implements Comparator<Orbit> {
 
         @Override
-        public int compare(Orbiting o1, Orbiting o2) {
+        public int compare(Orbit o1, Orbit o2) {
             double alt1 = o1.getAltitudeAboveSeaLevel();
             double alt2 = o2.getAltitudeAboveSeaLevel();
             if (alt1 < alt2) {

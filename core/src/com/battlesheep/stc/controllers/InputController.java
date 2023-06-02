@@ -6,7 +6,7 @@ import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.battlesheep.stc.game.Constants;
-import com.battlesheep.stc.game.Orbiting;
+import com.battlesheep.stc.game.Orbit;
 
 public class InputController implements InputProcessor {
 
@@ -59,7 +59,7 @@ public class InputController implements InputProcessor {
             Vector3 cursorPos = new Vector3(screenX, screenY, 0);
             cursorPos = camera.unproject(cursorPos);
             //System.out.println(" Cursor pos: x: " + cursorPos.x + " y: " + cursorPos.y);
-            for (Orbiting o : game.getOrbiting()) {
+            for (Orbit o : game.getOrbiting()) {
                 double xPos = o.getXPos() / gui.getPixelScale();
                 double yPos = o.getYPos() / gui.getPixelScale();
                 //System.out.println("Ship pos: x: " + xPos + " y: " + yPos);

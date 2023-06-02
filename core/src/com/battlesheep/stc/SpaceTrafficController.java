@@ -6,7 +6,6 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.battlesheep.stc.controllers.GUIController;
 import com.battlesheep.stc.controllers.GameController;
 import com.battlesheep.stc.controllers.InputController;
-import com.battlesheep.stc.game.Orbiting;
 import com.battlesheep.stc.game.Ship;
 
 import java.util.Random;

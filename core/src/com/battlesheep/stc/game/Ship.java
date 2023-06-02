@@ -4,7 +4,7 @@ import com.battlesheep.stc.controllers.GameController;
 
 import java.util.ArrayList;
 
-public class Ship extends Orbiting {
+public class Ship extends Orbit {
 
     private boolean isEncroached;
     private long lastChecked;
@@ -14,11 +14,11 @@ public class Ship extends Orbiting {
         isEncroached = false;
     }
 
-    public ArrayList<Ship> checkIfEncroached(ArrayList<Orbiting> orbiting, int index) {
+    public ArrayList<Ship> checkIfEncroached(ArrayList<Orbit> orbit, int index) {
         GameController game = GameController.getInstance();
         ArrayList<Ship> encroachedShips = new ArrayList<Ship>();
-        for (int i = index; i < orbiting.size(); i++) {
-            Orbiting o = orbiting.get(i);
+        for (int i = index; i < orbit.size(); i++) {
+            Orbit o = orbit.get(i);
             if (o instanceof Ship) {
                 Ship s = (Ship) o;
                 if (s.getAltitudeAboveSeaLevel() > getAltitudeAboveSeaLevel() + game.getShipMinDistance()) {

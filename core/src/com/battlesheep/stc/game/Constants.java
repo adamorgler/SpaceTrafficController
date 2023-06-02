@@ -43,7 +43,7 @@ public class Constants {
         return Math.abs(Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2)));
     }
 
-    public static double distanceBetween(Orbiting o1, Orbiting o2) {
+    public static double distanceBetween(Orbit o1, Orbit o2) {
         return distanceBetween(o1.getXPos(), o1.getYPos(), o2.getXPos(), o2.getYPos());
     }
 }

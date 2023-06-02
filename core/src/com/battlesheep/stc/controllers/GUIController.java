@@ -6,7 +6,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.battlesheep.stc.game.Constants;
-import com.battlesheep.stc.game.Orbiting;
+import com.battlesheep.stc.game.Orbit;
 import com.battlesheep.stc.game.Ship;
 
 public class GUIController {
@@ -124,7 +124,7 @@ public class GUIController {
 //        shapeRenderer.setColor(Color.YELLOW);
 //        shapeRenderer.circle(0,0, (int)(Constants.RADIUS_EARTH + 5000000) / pixelScale, circleSegments);
         // render orbits
-        for(Orbiting o : game.getOrbiting()) {
+        for(Orbit o : game.getOrbiting()) {
             // https://farside.ph.utexas.edu/teaching/celestial/Celestial/node30.html
             drawOrbit(o, circleSegments);
             drawShip(o);
@@ -142,7 +142,7 @@ public class GUIController {
         degreeTest += 1;
     }
 
-    private double[] getOrbitalPosition(Orbiting o) {
+    private double[] getOrbitalPosition(Orbit o) {
         double ap = o.getApoapsis();
         double pe = o.getPeriapsis();
         double v = o.getV();
@@ -162,7 +162,7 @@ public class GUIController {
         return p;
     }
 
-    private void drawOrbit(Orbiting o, int segments) {
+    private void drawOrbit(Orbit o, int segments) {
         if (!o.isSelected()) {
             return;
         }
@@ -179,13 +179,13 @@ public class GUIController {
         }
     }
 
-    private void drawShip(Orbiting o) {
+    private void drawShip(Orbit o) {
         double[] p = getOrbitalPosition(o);
         shapeRenderer.setColor(Color.CYAN);
         shapeRenderer.rect((float) p[0] / pixelScale - shipSize, (float) p[1] / pixelScale - shipSize, shipSize * 2, shipSize * 2);
     }
 
-    private void drawSelectionBox(Orbiting o) {
+    private void drawSelectionBox(Orbit o) {
         double[] p = getOrbitalPosition(o);
         shapeRenderer.setColor(Color.GOLD);
         shapeRenderer.rect((float) p[0] / pixelScale - (float) selectionSize, (float) p[1] / pixelScale - (float) selectionSize, (float) selectionSize * 2, (float) selectionSize * 2);
@@ -202,7 +202,7 @@ public class GUIController {
         shapeRenderer.circle((float) p[0] / pixelScale, (float) p[1] / pixelScale, (float) game.getShipMinDistance() / 2 / pixelScale);
     }
 
-    private void drawApoapsisAndPeriapsis(Orbiting o) {
+    private void drawApoapsisAndPeriapsis(Orbit o) {
         if (o.getPeriapsis() != o.getApoapsis()) {
             double w = o.getW();
             double ap = o.getApoapsis();
@@ -216,7 +216,7 @@ public class GUIController {
         }
     }
 
-    private void drawVelocityVectors(Orbiting o) {
+    private void drawVelocityVectors(Orbit o) {
         Vector2 velocityVector = o.getVelocityVector();
         double velocityX = velocityVector.x;
         double velocityY = velocityVector.y;

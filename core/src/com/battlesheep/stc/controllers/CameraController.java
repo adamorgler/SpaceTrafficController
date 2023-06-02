@@ -2,8 +2,7 @@ package com.battlesheep.stc.controllers;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.battlesheep.stc.game.Orbiting;
-import com.sun.org.apache.xpath.internal.operations.Or;
+import com.battlesheep.stc.game.Orbit;
 
 public class CameraController extends OrthographicCamera {
 
@@ -17,7 +16,7 @@ public class CameraController extends OrthographicCamera {
 
     private static CameraController instance;
 
-    private Orbiting following;
+    private Orbit following;
 
     private CameraController() {
         this.xPos = 0f;
@@ -27,7 +26,7 @@ public class CameraController extends OrthographicCamera {
         this.zoomLowerBound = 0.2f;
         this.zoomUpperBound = 4f;
 
-        following = new Orbiting(0,0,0,0);
+        following = new Orbit(0,0,0,0);
 
         this.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         this.position.set(xPos, yPos, zPos);
@@ -128,7 +127,7 @@ public class CameraController extends OrthographicCamera {
         this.yBound = yBound;
     }
 
-    public void setFollowing(Orbiting o) {
+    public void setFollowing(Orbit o) {
         following = o;
     }
 
