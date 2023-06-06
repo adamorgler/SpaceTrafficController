@@ -3,6 +3,7 @@ package com.battlesheep.stc;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.battlesheep.stc.controllers.CameraController;
 import com.battlesheep.stc.controllers.GUIController;
 import com.battlesheep.stc.controllers.GameController;
 import com.battlesheep.stc.controllers.InputController;
@@ -16,6 +17,7 @@ public class SpaceTrafficController extends ApplicationAdapter {
 	GUIController gui;
 	GameController game;
 	InputController input;
+	CameraController camera;
 
 	@Override
 	public void create () {
@@ -23,6 +25,7 @@ public class SpaceTrafficController extends ApplicationAdapter {
 		game = GameController.getInstance();
 		input = InputController.getInstance();
 		Gdx.input.setInputProcessor(input);
+		camera = CameraController.getInstance();
 
 		test1();
 	}
@@ -32,6 +35,7 @@ public class SpaceTrafficController extends ApplicationAdapter {
 		ScreenUtils.clear(1, 0, 0, 1);
 		gui.renderFrame();
 		game.step();
+		camera.updatePosition();
 	}
 	
 	@Override

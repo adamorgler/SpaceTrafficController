@@ -17,7 +17,7 @@ public class GameController {
 
     // game information
     private long stepCounter;
-    private float timeStep; // number of irl seconds to pass for each step.
+    private float secondsPerFrame; // number of irl seconds to pass for each step.
     private long lastUpdate; // time of last update
     private Scenario scenario;
 
@@ -25,8 +25,8 @@ public class GameController {
     private double shipMinDistance; // minimum distance ships must stay apart from one another, meters
 
     // planet info
-    private int centralBodyTime; // time on earth in-game in seconds
-    private int centralBodyTimeStep; // how much time in-game passes with each game step
+    private float centralBodyTime; // time on earth in-game in seconds
+    private float centralBodyTimeStep; // how much time in-game passes with each game step
     private CentralBody centralBody;
 
     // agents
@@ -40,13 +40,13 @@ public class GameController {
 
     private GameController() {
         stepCounter = 0;
-        timeStep = 0.05f;
+        secondsPerFrame = 1f / 30f;
         lastUpdate = 0;
 
         shipMinDistance = 300e3; // 300km
 
-        centralBodyTime = 0;
-        centralBodyTimeStep = 1;
+        centralBodyTime = 0f;
+        centralBodyTimeStep = 10f; // how much simulated time passed for every real life second in seconds
         centralBody = CentralBody.EARTH;
 
         orbits = new ArrayList<>();
@@ -66,7 +66,7 @@ public class GameController {
         // check if the timeStep has passed before making another update
         Date date = new Date();
         long time = date.getTime();
-        if (time < lastUpdate + (long)(timeStep * 1000)) {
+        if (time < lastUpdate + (long)(secondsPerFrame * 1000)) {
             return;
         }
         lastUpdate = time;
@@ -87,13 +87,12 @@ public class GameController {
         sortOrbitsByAltitude();
         for(int i = 0; i < orbits.size(); i++) {
             Orbit o = orbits.get(i);
-            o.step(centralBodyTimeStep);
+            o.step(centralBodyTimeStep * secondsPerFrame);
             if (o instanceof Ship) {
                 Ship s = (Ship) o;
                 encroachedShips.addAll(s.checkIfEncroached(orbits, i));
             }
         }
-        camera.updatePosition();
     }
 
     private void sortOrbitsByAltitude() {
@@ -101,13 +100,13 @@ public class GameController {
     }
 
     private void iterateCentralBodyTime() {
-        centralBodyTime += centralBodyTimeStep;
+        centralBodyTime += centralBodyTimeStep * secondsPerFrame;
         if (centralBodyTime > Constants.getDayLengthCentralBody()) {
             centralBodyTime -= Constants.getDayLengthCentralBody();
         }
     }
 
-    public int getCentralBodyTime() {
+    public float getCentralBodyTime() {
         return centralBodyTime;
     }
 
