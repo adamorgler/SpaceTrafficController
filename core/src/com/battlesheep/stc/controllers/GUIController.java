@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.battlesheep.stc.game.Constants;
+import com.battlesheep.stc.game.Maneuver;
 import com.battlesheep.stc.game.Orbit;
 import com.battlesheep.stc.game.Ship;
 
@@ -26,7 +27,9 @@ public class GUIController {
     private int circleSegments;
     private int shipSize; // size of ship's square on map (radius)
     private int labelSize; // size of ap and pe labels on map
+    private int maneuverSize;
     private int selectionSize; // size of selection box around ship
+    private float shipMinDistanceShown; // multiplier of ship min distance in which it is shown on the map
 
     private GUIController() {
         shapeRenderer = new ShapeRenderer();
@@ -34,13 +37,16 @@ public class GUIController {
         game = GameController.getInstance();
 
         pixelScale = 10000;
-        cameraBound = 400000;
+        cameraBound = 2000000;
         numLatLines = 6;
         numLongLines = 8; // must be even
         circleSegments = 128;
         shipSize = 3;
         labelSize = 5;
-        selectionSize = (int) game.getShipMinDistance() / 2 / pixelScale + 5;
+        maneuverSize = 8;
+        selectionSize = shipSize;
+        // selectionSize = (int) game.getShipMinDistance() / 2 / pixelScale + 5;
+        shipMinDistanceShown = 2.0f;
     }
 
     public static GUIController getInstance() {
@@ -67,6 +73,14 @@ public class GUIController {
 
         renderCentralBody();
         renderOrbiters();
+    }
+
+    public double getPixelScale() {
+        return pixelScale;
+    }
+
+    public float getShipMinDistanceShown() {
+        return shipMinDistanceShown;
     }
 
     private void renderCentralBody() {
@@ -119,27 +133,123 @@ public class GUIController {
     }
 
     private void renderOrbiters() {
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-//        // ISS test
-//        shapeRenderer.setColor(Color.YELLOW);
-//        shapeRenderer.circle(0,0, (int)(Constants.RADIUS_EARTH + 5000000) / pixelScale, circleSegments);
         // render orbits
         for(Orbit o : game.getOrbiting()) {
             // https://farside.ph.utexas.edu/teaching/celestial/Celestial/node30.html
-            drawOrbit(o, circleSegments);
             drawShip(o);
             if (o instanceof Ship) {
                 Ship s = (Ship) o;
                 drawMinDistance(s);
             }
             if (o.isSelected()) {
+                drawSelected(o);
+            }
+            if (o.isSelected() && o instanceof Ship) {
+                Ship s = (Ship) o;
+                drawOrbit(o, circleSegments);
                 drawApoapsisAndPeriapsis(o);
+                drawManeuver(s);
+            }
+            if (game.DEV_MODE && o instanceof Ship) {
+                Ship s = (Ship) o;
+                drawShipMinDistanceShownDistance(s);
+            }
+            if (game.DEV_MODE && o.isSelected()) {
                 drawVelocityVectors(o);
-                drawSelectionBox(o);
             }
         }
-        shapeRenderer.end();
         degreeTest += 1;
+    }
+
+    private void drawOrbit(Orbit o, int segments) {
+        double ap = o.getApoapsis();
+        double pe = o.getPeriapsis();
+        double w = o.getW();
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(Color.WHITE);
+        for (int i = 0; i < segments; i++) {
+            double theta1 = (360f * i / segments);
+            double theta2 = (360f * (i + 1) / segments);
+            double[] p1 = getOrbitalPosition(ap, pe, theta1, w);
+            double[] p2 = getOrbitalPosition(ap, pe, theta2, w);;
+            shapeRenderer.line((float) p1[0] / pixelScale, (float) p1[1] / pixelScale, (float) p2[0] / pixelScale, (float) p2[1] / pixelScale);
+        }
+        shapeRenderer.end();
+    }
+
+    private void drawShip(Orbit o) {
+        double[] p = getOrbitalPosition(o);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(Color.CYAN);
+        shapeRenderer.rect((float) p[0] / pixelScale - shipSize, (float) p[1] / pixelScale - shipSize, shipSize * 2, shipSize * 2);
+        shapeRenderer.end();
+    }
+
+    private void drawSelected(Orbit o) {
+        double[] p = getOrbitalPosition(o);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(Color.YELLOW);
+        shapeRenderer.rect((float) p[0] / pixelScale - (float) selectionSize, (float) p[1] / pixelScale - (float) selectionSize, (float) selectionSize * 2, (float) selectionSize * 2);
+        shapeRenderer.circle((float) p[0] / pixelScale, (float) p[1] / pixelScale, (float) game.getShipMinDistance() / 2 / pixelScale);
+        shapeRenderer.end();
+    }
+
+    private void drawMinDistance(Ship s) {
+        if (s.getClosestShipDistance() > game.getShipMinDistance() * shipMinDistanceShown) {
+            return;
+        }
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        if (s.isEncroached()) {
+            shapeRenderer.setColor(Color.RED);
+        }
+        else {
+            shapeRenderer.setColor(Color.GREEN);
+        }
+        double[] p = getOrbitalPosition(s);
+        shapeRenderer.circle((float) p[0] / pixelScale, (float) p[1] / pixelScale, (float) game.getShipMinDistance() / 2 / pixelScale);
+        shapeRenderer.end();
+    }
+
+    private void drawApoapsisAndPeriapsis(Orbit o) {
+        if (o.getPeriapsis() != o.getApoapsis()) {
+            double w = o.getW();
+            double ap = o.getApoapsis();
+            double pe = o.getPeriapsis();
+            double[] apPos = getOrbitalPosition(ap, pe, 180, w);
+            double[] pePos = getOrbitalPosition(ap, pe, 0, w);
+            shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+            shapeRenderer.setColor(Color.RED);
+            shapeRenderer.circle((float) pePos[0] / pixelScale, (float) pePos[1] / pixelScale, labelSize * camera.zoom);
+            shapeRenderer.setColor(Color.BLUE);
+            shapeRenderer.circle((float) apPos[0] / pixelScale, (float) apPos[1] / pixelScale, labelSize * camera.zoom);
+            shapeRenderer.end();
+        }
+    }
+
+    private void drawManeuver(Ship s) {
+        Maneuver m = s.getManeuver();
+        double[] p = getManeuverNodePosition(m);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(Color.ORANGE);
+        shapeRenderer.circle((float) p[0] / pixelScale, (float) p[1] / pixelScale, (float) maneuverSize * camera.zoom);
+        shapeRenderer.end();
+    }
+
+    private double radiusFromFoci(double a, double e, double theta) {
+        return (a * (1 - Math.pow(e, 2))) / (1 + e * Math.cos(Math.toRadians(theta)));
+    }
+
+    private double[] getManeuverNodePosition(Maneuver m) {
+        Orbit o = m.getParentOrbit();
+        double v = m.getV();
+        return getOrbitalPositionAtV(o, v);
+    }
+
+    private double[] getOrbitalPositionAtV(Orbit o, double v) {
+        double ap = o.getApoapsis();
+        double pe = o.getPeriapsis();
+        double w = o.getW();
+        return getOrbitalPosition(ap, pe, v, w);
     }
 
     private double[] getOrbitalPosition(Orbit o) {
@@ -162,80 +272,30 @@ public class GUIController {
         return p;
     }
 
-    private void drawOrbit(Orbit o, int segments) {
-        if (!o.isSelected()) {
-            return;
-        }
-        shapeRenderer.setColor(Color.WHITE);
-        double ap = o.getApoapsis();
-        double pe = o.getPeriapsis();
-        double w = o.getW();
-        for (int i = 0; i < segments; i++) {
-            double theta1 = (360f * i / segments);
-            double theta2 = (360f * (i + 1) / segments);
-            double[] p1 = getOrbitalPosition(ap, pe, theta1, w);
-            double[] p2 = getOrbitalPosition(ap, pe, theta2, w);;
-            shapeRenderer.line((float) p1[0] / pixelScale, (float) p1[1] / pixelScale, (float) p2[0] / pixelScale, (float) p2[1] / pixelScale);
-        }
-    }
-
-    private void drawShip(Orbit o) {
-        double[] p = getOrbitalPosition(o);
-        shapeRenderer.setColor(Color.CYAN);
-        shapeRenderer.rect((float) p[0] / pixelScale - shipSize, (float) p[1] / pixelScale - shipSize, shipSize * 2, shipSize * 2);
-    }
-
-    private void drawSelectionBox(Orbit o) {
-        double[] p = getOrbitalPosition(o);
-        shapeRenderer.setColor(Color.GOLD);
-        shapeRenderer.rect((float) p[0] / pixelScale - (float) selectionSize, (float) p[1] / pixelScale - (float) selectionSize, (float) selectionSize * 2, (float) selectionSize * 2);
-    }
-
-    private void drawMinDistance(Ship s) {
-        double[] p = getOrbitalPosition(s);
-        if (s.isEncroached()) {
-            shapeRenderer.setColor(Color.RED);
-        }
-        else {
-            shapeRenderer.setColor(Color.GREEN);
-        }
-        shapeRenderer.circle((float) p[0] / pixelScale, (float) p[1] / pixelScale, (float) game.getShipMinDistance() / 2 / pixelScale);
-    }
-
-    private void drawApoapsisAndPeriapsis(Orbit o) {
-        if (o.getPeriapsis() != o.getApoapsis()) {
-            double w = o.getW();
-            double ap = o.getApoapsis();
-            double pe = o.getPeriapsis();
-            double[] apPos = getOrbitalPosition(ap, pe, 180, w);
-            double[] pePos = getOrbitalPosition(ap, pe, 0, w);
-            shapeRenderer.setColor(Color.RED);
-            shapeRenderer.circle((float) pePos[0] / pixelScale, (float) pePos[1] / pixelScale, labelSize * camera.zoom);
-            shapeRenderer.setColor(Color.BLUE);
-            shapeRenderer.circle((float) apPos[0] / pixelScale, (float) apPos[1] / pixelScale, labelSize * camera.zoom);
-        }
-    }
+    // DEV STUFF ==============================================================================================
 
     private void drawVelocityVectors(Orbit o) {
-        Vector2 velocityVector = o.getVelocityVector();
+        Vector2 velocityVector = o.getCartesianVelocityVector();
         double velocityX = velocityVector.x;
         double velocityY = velocityVector.y;
         double xPos = o.getXPos();
         double yPos = o.getYPos();
         float vectorScale = 100;
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         shapeRenderer.setColor(Color.RED);
         shapeRenderer.line((float) xPos / pixelScale, (float) yPos / pixelScale, (float) (xPos + velocityX * vectorScale) / pixelScale, (float) (yPos) / pixelScale);
         shapeRenderer.setColor((Color.BLUE));
         shapeRenderer.line((float) xPos / pixelScale, (float) yPos / pixelScale, (float) (xPos) / pixelScale, (float) (yPos + velocityY * vectorScale) / pixelScale);
         shapeRenderer.setColor(Color.YELLOW);
         shapeRenderer.line((float) xPos / pixelScale, (float) yPos / pixelScale, (float) (xPos + velocityX * vectorScale) / pixelScale, (float) (yPos + velocityY * vectorScale) / pixelScale);
+        shapeRenderer.end();
     }
 
-    private double radiusFromFoci(double a, double e, double theta) {
-        return (a * (1 - Math.pow(e, 2))) / (1 + e * Math.cos(Math.toRadians(theta)));
-    }
-
-    public double getPixelScale() {
-        return pixelScale;
+    private void drawShipMinDistanceShownDistance(Ship s) {
+        double[] p = getOrbitalPosition(s);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(Color.WHITE);
+        shapeRenderer.circle((float) p[0] / pixelScale, (float) p[1] / pixelScale, (float) game.getShipMinDistance() / 2 / pixelScale * shipMinDistanceShown);
+        shapeRenderer.end();
     }
 }

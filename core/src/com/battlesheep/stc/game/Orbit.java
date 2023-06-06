@@ -86,17 +86,29 @@ public class Orbit {
         return Math.sqrt(1 - (Math.pow(getSemiMinorAxis(), 2) / Math.pow(getSemiMajorAxis(), 2)));
     }
 
-    public double getVelocity() {
-        double r = radiusFromFoci(getSemiMajorAxis(), getEccentricity(), v);
+    public double getVelocityAtV(double v) {
+        double r = getRadiusAtV(v);
         return Math.sqrt((Constants.G * Constants.getMassCentralBody()) * ((2 / r) - (1 / getSemiMajorAxis())));
     }
 
+    public double getVelocity() {
+        return getVelocityAtV(v);
+    }
+
+    public double getXPosAtV(double v) {
+        return Constants.polarToCartesian(getRadiusAtV(v), Math.toRadians(v + w))[0];
+    }
+
     public double getXPos() {
-        return Constants.polarToCartesian(radiusFromFoci(getSemiMajorAxis(), getEccentricity(), v), Math.toRadians(v + w))[0];
+        return getXPosAtV(v);
+    }
+
+    public double getYPosAtV(double v) {
+        return Constants.polarToCartesian(getRadiusAtV(v), Math.toRadians(v + w))[1];
     }
 
     public double getYPos() {
-        return Constants.polarToCartesian(radiusFromFoci(getSemiMajorAxis(), getEccentricity(), v), Math.toRadians(v + w))[1];
+        return getYPosAtV(v);
     }
 
     public double getDelta(double time) {
@@ -110,10 +122,14 @@ public class Orbit {
         return Math.toDegrees(delta);
     }
 
-    public Vector2 getVelocityVector() {
-        Vector2 v = new Vector2((float) getVelocityX(), (float) getVelocityY());
-        v.rotateDeg((float)w);
-        return v;
+    public Vector2 getCartesianVelocityVectorAtV(double v) {
+        Vector2 vec = new Vector2((float) getVelocityXAtV(v), (float) getVelocityYAtV(v));
+        vec.rotateDeg((float)w);
+        return vec;
+    }
+
+    public Vector2 getCartesianVelocityVector() {
+        return getCartesianVelocityVectorAtV(v);
     }
 
     public double getAltitudeAboveSeaLevel() {
@@ -122,22 +138,41 @@ public class Orbit {
         return radiusFromFoci(a, e, v) - Constants.getRadiusCentralBody();
     }
 
+    public double getFlightPathAngle() {
+        double e = getEccentricity();
+        return Math.atan((e * Math.sin(Math.toRadians(v))) / (1 + e * Math.cos(Math.toRadians(v))));
+    }
+
+    public double getRadiusAtV(double v) {
+        double a = getSemiMajorAxis();
+        double e = getEccentricity();
+        return radiusFromFoci(a, e, v);
+    }
+
     private double radiusFromFoci(double a, double e, double theta) {
         return (a * (1 - Math.pow(e, 2))) / (1 + e * Math.cos(Math.toRadians(theta)));
     }
 
     // get velocity x in the perifocal frame
     // https://physics.stackexchange.com/questions/669946/how-to-calculate-the-direction-of-the-velocity-vector-for-a-body-that-moving-is
-    private double getVelocityX() {
+    private double getVelocityXAtV(double v){
         double e = getEccentricity();
-        return getVelocity() * (0 - Math.sin(Math.toRadians(v))) / (Math.sqrt(1 + Math.pow(e, 2) + 2 * e * Math.cos(Math.toRadians(v))));
+        return getVelocityAtV(v) * (0 - Math.sin(Math.toRadians(v))) / (Math.sqrt(1 + Math.pow(e, 2) + 2 * e * Math.cos(Math.toRadians(v))));
+    }
+
+    private double getVelocityX() {
+        return getVelocityXAtV(v);
     }
 
     // get velocity y in the perifocal frame
     // https://physics.stackexchange.com/questions/669946/how-to-calculate-the-direction-of-the-velocity-vector-for-a-body-that-moving-is
-    private double getVelocityY() {
+    private double getVelocityYAtV(double v) {
         double e = getEccentricity();
-        return getVelocity() * (e + Math.cos(Math.toRadians(v))) / (Math.sqrt(1 + Math.pow(e, 2) + 2 * e * Math.cos(Math.toRadians(v))));
+        return getVelocityAtV(v) * (e + Math.cos(Math.toRadians(v))) / (Math.sqrt(1 + Math.pow(e, 2) + 2 * e * Math.cos(Math.toRadians(v))));
+    }
+
+    private double getVelocityY() {
+        return getVelocityYAtV(v);
     }
 
     public boolean isSelected() {

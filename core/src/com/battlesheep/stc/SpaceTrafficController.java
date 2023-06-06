@@ -24,7 +24,7 @@ public class SpaceTrafficController extends ApplicationAdapter {
 		input = InputController.getInstance();
 		Gdx.input.setInputProcessor(input);
 
-		tests();
+		test1();
 	}
 
 	@Override
@@ -39,7 +39,7 @@ public class SpaceTrafficController extends ApplicationAdapter {
 
 	}
 
-	private void tests() {
+	private void test1() {
 //		Orbiting o1 = new Orbiting(400000, 400000, 0, 180);
 //		Orbiting o2 = new Orbiting(4000000, 200000, 66, 90);
 //		gameController.addOrbiting(o1);
@@ -54,6 +54,7 @@ public class SpaceTrafficController extends ApplicationAdapter {
 			int v = rand.nextInt(359);
 			int w = rand.nextInt(359);
 			Ship s = new Ship(ap, pe, v, w);
+			s.createManeuver(v);
 			game.addOrbiting(s);
 		}
 	}

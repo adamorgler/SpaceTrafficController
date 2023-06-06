@@ -2,7 +2,7 @@ package com.battlesheep.stc.game;
 
 import com.badlogic.gdx.math.Vector2;
 
-public class Manuever {
+public class Maneuver {
 
     private Orbit parentOrbit;
     private Orbit newOrbit;
@@ -10,12 +10,24 @@ public class Manuever {
     private double deltaVPerpendicular;
     private double v;
 
-    public Manuever(Orbit parentOrbit, int v){
+    public Maneuver(Orbit parentOrbit, double v){
         this.parentOrbit = parentOrbit;
-        this.newOrbit = new Orbit(parentOrbit.getApoapsis(), parentOrbit.getPeriapsis(), parentOrbit.getV(), parentOrbit.getW());
         this.v = v;
         this.deltaVTangential = 0.0;
         this.deltaVPerpendicular = 0.0;
+        calculateNewOrbit();
+    }
+
+    public double getV() {
+        return v;
+    }
+
+    public Orbit getParentOrbit() {
+        return parentOrbit;
+    }
+
+    public Orbit getNewOrbit() {
+        return newOrbit;
     }
 
     public void addDeltaVTangential(double deltaV) {
@@ -31,21 +43,12 @@ public class Manuever {
     }
 
     public void calculateNewOrbit() {
-        Vector2 newVelocityVector = parentOrbit.getVelocityVector().add(getDeltaVVector());
+        double mu = Constants.getMassCentralBody() * Constants.G;
+        double r = parentOrbit.getRadiusAtV(v);
+        double velocityTangential = parentOrbit.getVelocityAtV(v) + deltaVTangential;
+        double velocityPerpendicular = deltaVPerpendicular;
+        double velocity = Math.sqrt(Math.pow(velocityPerpendicular, 2) + Math.pow(velocityTangential, 2));
 
     }
-
-    private Vector2 getDeltaVVector() {
-        return new Vector2((float) getDeltaVX(), (float) getDeltaVY());
-    }
-
-    private double getDeltaVX() {
-        return 0.0;
-    }
-
-    private double getDeltaVY() {
-        return 0.0;
-    }
-
 
 }

@@ -9,6 +9,10 @@ import java.util.*;
 
 public class GameController {
 
+    // dev stuff
+    public boolean DEV_MODE = false;
+
+    // enums
     public enum CentralBody {EARTH};
 
     // game information
@@ -70,6 +74,12 @@ public class GameController {
         // step logic
         stepCounter++;
         iterateCentralBodyTime();
+        for (Orbit o : orbits) {
+            if (o instanceof Ship) {
+                Ship s = (Ship) o;
+                s.resetClosestShipDistance();
+            }
+        }
         for (Ship s : encroachedShips) {
             s.setEncroached(false);
         }
@@ -83,6 +93,7 @@ public class GameController {
                 encroachedShips.addAll(s.checkIfEncroached(orbits, i));
             }
         }
+        camera.updatePosition();
     }
 
     private void sortOrbitsByAltitude() {

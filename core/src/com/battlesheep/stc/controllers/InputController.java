@@ -17,7 +17,6 @@ public class InputController implements InputProcessor {
     private GUIController gui;
 
     private Vector2 lastTouch;
-    private boolean selected;
 
     private InputController() {
         camera = CameraController.getInstance();
@@ -25,7 +24,6 @@ public class InputController implements InputProcessor {
         gui = GUIController.getInstance();
 
         lastTouch = new Vector2();
-        selected = false;
     }
 
     public static InputController getInstance() {
@@ -37,6 +35,11 @@ public class InputController implements InputProcessor {
 
     @Override
     public boolean keyDown(int keycode) {
+        switch (keycode) {
+            case Input.Keys.F11: {
+                game.DEV_MODE = game.DEV_MODE ? false : true;
+            }
+        }
         return false;
     }
 
@@ -60,20 +63,20 @@ public class InputController implements InputProcessor {
             cursorPos = camera.unproject(cursorPos);
             //System.out.println(" Cursor pos: x: " + cursorPos.x + " y: " + cursorPos.y);
             for (Orbit o : game.getOrbiting()) {
+                o.setSelected(false);
+            }
+            camera.setFollowing(null);
+            for (Orbit o : game.getOrbiting()) {
                 double xPos = o.getXPos() / gui.getPixelScale();
                 double yPos = o.getYPos() / gui.getPixelScale();
                 //System.out.println("Ship pos: x: " + xPos + " y: " + yPos);
                 double distance = Constants.distanceBetween(xPos, yPos, cursorPos.x, cursorPos.y);
-                if (distance < game.getShipMinDistance() / gui.getPixelScale() && !selected) {
-                    selected = true;
-                    o.setSelected(selected);
+                if (distance < game.getShipMinDistance() / gui.getPixelScale() / 2) {
+                    o.setSelected(true);
                     camera.setFollowing(o);
-                    // move selected orbiting object to top of list
-                } else {
-                    o.setSelected(false);
+                    break;
                 }
             }
-            selected = false;
         }
         return true;
     }
@@ -89,8 +92,10 @@ public class InputController implements InputProcessor {
             Vector2 newTouch = new Vector2(screenX, screenY);
             Vector2 delta = newTouch.cpy().sub(lastTouch);
             lastTouch = newTouch;
+            camera.setFollowing(null);
             camera.moveXPos(delta.x * camera.zoom);
             camera.moveYPos(delta.y * camera.zoom);
+
         }
         return false;
     }

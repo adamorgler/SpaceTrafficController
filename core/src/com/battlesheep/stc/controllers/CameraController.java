@@ -2,6 +2,7 @@ package com.battlesheep.stc.controllers;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.math.Vector3;
 import com.battlesheep.stc.game.Orbit;
 
 public class CameraController extends OrthographicCamera {
@@ -17,6 +18,8 @@ public class CameraController extends OrthographicCamera {
     private static CameraController instance;
 
     private Orbit following;
+    private float xFollowingOffset;
+    private float yFollowingOffset;
 
     private CameraController() {
         this.xPos = 0f;
@@ -25,11 +28,12 @@ public class CameraController extends OrthographicCamera {
         this.zoom = 2f;
         this.zoomLowerBound = 0.2f;
         this.zoomUpperBound = 4f;
-
-        following = new Orbit(0,0,0,0);
-
         this.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         this.position.set(xPos, yPos, zPos);
+
+        this.following = null;
+        this.xFollowingOffset = 0f;
+        this.yFollowingOffset = 0f;
     }
 
     public static CameraController getInstance() {
@@ -40,9 +44,10 @@ public class CameraController extends OrthographicCamera {
     }
 
     public void updatePosition() {
-        if (following.isSelected()) {
-            setxPos((float) (following.getXPos() / GUIController.getInstance().getPixelScale()));
-            setyPos((float) (following.getYPos() / GUIController.getInstance().getPixelScale()));
+        GUIController gui = GUIController.getInstance();
+        if (following != null) {
+            setxPos((float) (following.getXPos() / gui.getPixelScale()));
+            setyPos((float) (following.getYPos() / gui.getPixelScale()));
         }
     }
 
@@ -130,5 +135,6 @@ public class CameraController extends OrthographicCamera {
     public void setFollowing(Orbit o) {
         following = o;
     }
+    public boolean isFollowing() { return following != null; }
 
 }
