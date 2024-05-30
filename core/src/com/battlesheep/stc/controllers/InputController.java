@@ -11,6 +11,8 @@ import com.battlesheep.stc.game.Orbit;
 public class InputController implements InputProcessor {
 
     public static class KEY_BINDS {
+        public static final int INCREASE_TIME = Input.Keys.PERIOD;
+        public static final int DECREASE_TIME = Input.Keys.COMMA;
         public static final int PAUSE = Input.Keys.SPACE;
         public static final int DEV_MODE = Input.Keys.F11;
     }
@@ -41,6 +43,14 @@ public class InputController implements InputProcessor {
     @Override
     public boolean keyDown(int keycode) {
         switch (keycode) {
+            case KEY_BINDS.INCREASE_TIME: {
+                game.increaseStep();
+                break;
+            }
+            case KEY_BINDS.DECREASE_TIME: {
+                game.decreaseStep();
+                break;
+            }
             case KEY_BINDS.PAUSE: {
                 game.paused = game.paused ? false : true;
                 break;
@@ -49,8 +59,6 @@ public class InputController implements InputProcessor {
                 game.DEV_MODE = game.DEV_MODE ? false : true;
                 break;
             }
-            default:
-                break;
         }
         return false;
     }
