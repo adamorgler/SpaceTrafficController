@@ -10,6 +10,11 @@ import com.battlesheep.stc.game.Orbit;
 
 public class InputController implements InputProcessor {
 
+    public static class KEY_BINDS {
+        public static final int PAUSE = Input.Keys.SPACE;
+        public static final int DEV_MODE = Input.Keys.F11;
+    }
+
     private static InputController instance;
 
     private CameraController camera;
@@ -36,9 +41,16 @@ public class InputController implements InputProcessor {
     @Override
     public boolean keyDown(int keycode) {
         switch (keycode) {
-            case Input.Keys.F11: {
-                game.DEV_MODE = game.DEV_MODE ? false : true;
+            case KEY_BINDS.PAUSE: {
+                game.paused = game.paused ? false : true;
+                break;
             }
+            case KEY_BINDS.DEV_MODE: {
+                game.DEV_MODE = game.DEV_MODE ? false : true;
+                break;
+            }
+            default:
+                break;
         }
         return false;
     }

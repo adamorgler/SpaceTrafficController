@@ -20,12 +20,13 @@ public class GameController {
     private float secondsPerFrame; // number of irl seconds to pass for each step.
     private long lastUpdate; // time of last update
     private Scenario scenario;
+    public boolean paused;
 
     // game rules
     private double shipMinDistance; // minimum distance ships must stay apart from one another, meters
 
     // planet info
-    private float centralBodyTime; // time on earth in-game in seconds
+    public float centralBodyTime; // time on earth in-game in seconds
     private float centralBodyTimeStep; // how much time in-game passes with each game step
     private CentralBody centralBody;
 
@@ -104,18 +105,6 @@ public class GameController {
         if (centralBodyTime > Constants.getDayLengthCentralBody()) {
             centralBodyTime -= Constants.getDayLengthCentralBody();
         }
-    }
-
-    public float getCentralBodyTime() {
-        return centralBodyTime;
-    }
-
-    public void setCentralBodyTime(int time) {
-        this.centralBodyTime = time;
-    }
-
-    public void setCentralBodyTimeStep(int step) {
-        centralBodyTimeStep = step;
     }
 
     public ArrayList<Orbit> getOrbiting() {

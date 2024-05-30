@@ -12,6 +12,13 @@ import com.battlesheep.stc.game.Ship;
 
 public class GUIController {
 
+    private enum UI_STATE {
+        DEFAULT,
+        SHIP_SELECTED,
+    }
+
+    public UI_STATE uiState;
+
     private double degreeTest = 0;
 
     private static GUIController instance;
@@ -32,6 +39,8 @@ public class GUIController {
     private float shipMinDistanceShown; // multiplier of ship min distance in which it is shown on the map
 
     private GUIController() {
+        uiState = UI_STATE.DEFAULT;
+
         shapeRenderer = new ShapeRenderer();
         camera = CameraController.getInstance();
         game = GameController.getInstance();
@@ -70,6 +79,7 @@ public class GUIController {
         //camera.updatePosition();
         camera.update();
         shapeRenderer.setProjectionMatrix(camera.combined);
+
 
         renderCentralBody();
         renderOrbiters();
@@ -122,7 +132,7 @@ public class GUIController {
                 shapeRenderer.setColor(Color.BLACK);
             }
             double r = Constants.getRadiusCentralBody() / pixelScale;
-            double d = (360f * i / numLongLines) + (360f * game.getCentralBodyTime() / Constants.getDayLengthCentralBody());
+            double d = (360f * i / numLongLines) + (360f * game.centralBodyTime / Constants.getDayLengthCentralBody());
             double a = Math.toRadians(d);
             shapeRenderer.line((float) Constants.polarToCartesian(r, a)[0],
                     (float) Constants.polarToCartesian(r, a)[1],
