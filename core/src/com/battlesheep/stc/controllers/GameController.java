@@ -51,8 +51,6 @@ public class GameController {
 
         orbits = new ArrayList<>();
         encroachedShips = new ArrayList<>();
-
-        camera = CameraController.getInstance();
     }
 
     public static GameController getInstance() {
