@@ -35,9 +35,6 @@ public class GameController {
     private ArrayList<Orbit> orbits;
     private ArrayList<Ship> encroachedShips;
 
-    // camera
-    private CameraController camera;
-
     private static GameController instance;
 
     private GameController() {

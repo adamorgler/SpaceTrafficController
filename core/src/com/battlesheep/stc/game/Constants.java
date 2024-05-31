@@ -36,6 +36,7 @@ public class Constants {
     public static double[] cartesianToPolar(double x, double y) {
         double r = Math.sqrt((x * x) + (y * y));
         double a = Math.atan(y / x);
+        if (x < 0) a += Math.PI;
         return new double[]{r, a};
     }
 

@@ -4,11 +4,13 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.battlesheep.stc.game.Constants;
 import com.battlesheep.stc.game.Maneuver;
 import com.battlesheep.stc.game.Orbit;
 import com.battlesheep.stc.game.Ship;
+import com.sun.org.apache.bcel.internal.Const;
 
 public class GUIController {
 
@@ -37,6 +39,7 @@ public class GUIController {
     private int maneuverSize;
     private int selectionSize; // size of selection box around ship
     private float shipMinDistanceShown; // multiplier of ship min distance in which it is shown on the map
+    private int manueverNodeToolShowDistance; // distance from oribit that manuever node placement tool is shown in pixles
 
     private GUIController() {
         uiState = UI_STATE.DEFAULT;
@@ -56,6 +59,7 @@ public class GUIController {
         selectionSize = shipSize;
         // selectionSize = (int) game.getShipMinDistance() / 2 / pixelScale + 5;
         shipMinDistanceShown = 2.0f;
+        manueverNodeToolShowDistance = 20;
     }
 
     public static GUIController getInstance() {
@@ -158,7 +162,7 @@ public class GUIController {
                 Ship s = (Ship) o;
                 drawOrbit(o, circleSegments);
                 drawApoapsisAndPeriapsis(o);
-                drawManeuver(s);
+                drawMouseIntersection(o);
             }
             if (game.DEV_MODE && o instanceof Ship) {
                 Ship s = (Ship) o;
@@ -245,6 +249,23 @@ public class GUIController {
         shapeRenderer.end();
     }
 
+    private void drawMouseIntersection(Orbit o) {
+        Vector3 cursorPos = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
+        cursorPos = camera.unproject(cursorPos);
+        double[] cursorPosPolar = Constants.cartesianToPolar(cursorPos.x, cursorPos.y);
+        double r = cursorPosPolar[0];
+        double a = Math.toDegrees(cursorPosPolar[1]);
+        double[] p = getOrbitalIntersectionFromA(o, a);
+
+        double intersectionRadius = getOrbitalIntersectionRadiusFromA(o, a) / pixelScale;
+        if (intersectionRadius + manueverNodeToolShowDistance > r && intersectionRadius - manueverNodeToolShowDistance < r) {
+            shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+            shapeRenderer.setColor(Color.LIGHT_GRAY);
+            shapeRenderer.circle((float) p[0] / pixelScale, (float) p[1] / pixelScale, (float) maneuverSize * camera.zoom);
+            shapeRenderer.end();
+        }
+    }
+
     private double radiusFromFoci(double a, double e, double theta) {
         return (a * (1 - Math.pow(e, 2))) / (1 + e * Math.cos(Math.toRadians(theta)));
     }
@@ -253,6 +274,18 @@ public class GUIController {
         Orbit o = m.getParentOrbit();
         double v = m.getV();
         return getOrbitalPositionAtV(o, v);
+    }
+
+    private double[] getOrbitalIntersectionFromA(Orbit o, double a) {
+        double ap = o.getApoapsis();
+        double pe = o.getPeriapsis();
+        double w = o.getW();
+        return getOrbitalPosition(ap, pe, a - w, w);
+    }
+
+    private double getOrbitalIntersectionRadiusFromA(Orbit o, double a) {
+        double w = o.getW();
+        return o.getRadiusAtV(a - w);
     }
 
     private double[] getOrbitalPositionAtV(Orbit o, double v) {
