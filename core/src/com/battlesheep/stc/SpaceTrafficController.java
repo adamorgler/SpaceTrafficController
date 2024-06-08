@@ -58,7 +58,6 @@ public class SpaceTrafficController extends ApplicationAdapter {
 			int v = rand.nextInt(359);
 			int w = rand.nextInt(359);
 			Ship s = new Ship(ap, pe, v, w);
-			s.createManeuver(v);
 			game.addOrbiting(s);
 		}
 	}

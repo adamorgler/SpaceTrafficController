@@ -7,6 +7,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.battlesheep.stc.game.Constants;
 import com.battlesheep.stc.game.Orbit;
+import com.battlesheep.stc.game.Ship;
 
 public class InputController implements InputProcessor {
 
@@ -75,25 +76,37 @@ public class InputController implements InputProcessor {
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+        Vector3 cursorPos = camera.getCursorPosition();
+
         if (button == Input.Buttons.MIDDLE) {
             lastTouch.set(screenX, screenY);
         }
         if (button == Input.Buttons.LEFT) {
-            Vector3 cursorPos = new Vector3(screenX, screenY, 0);
-            cursorPos = camera.unproject(cursorPos);
-            //System.out.println(" Cursor pos: x: " + cursorPos.x + " y: " + cursorPos.y);
-            for (Orbit o : game.getOrbiting()) {
-                o.setSelected(false);
-            }
             camera.setFollowing(null);
+            if (gui.uiState == GUIController.UI_STATE.ORBIT_SELECTED) {
+                Orbit selectedOrbit = gui.selectedOrbit;
+                if (camera.cursorIntersectsOrbit(selectedOrbit) && selectedOrbit instanceof Ship) {
+                    Ship selectedShip = (Ship)selectedOrbit;
+                    double a = Math.toDegrees(camera.getCursorPositionPolar()[1]);
+                    selectedShip.createManeuver(a - selectedShip.getW());
+                    return true;
+                } else {
+                    gui.uiState = GUIController.UI_STATE.DEFAULT;
+                    gui.selectedOrbit = null;
+                    if(selectedOrbit instanceof Ship) {
+                        ((Ship)(selectedOrbit)).deleteManeuver();
+                    }
+                }
+            }
             for (Orbit o : game.getOrbiting()) {
-                double xPos = o.getXPos() / gui.getPixelScale();
-                double yPos = o.getYPos() / gui.getPixelScale();
+                double xPos = o.getXPos() / GUIController.pixelScale;
+                double yPos = o.getYPos() / GUIController.pixelScale;
                 //System.out.println("Ship pos: x: " + xPos + " y: " + yPos);
                 double distance = Constants.distanceBetween(xPos, yPos, cursorPos.x, cursorPos.y);
-                if (distance < game.getShipMinDistance() / gui.getPixelScale() / 2) {
-                    o.setSelected(true);
+                if (distance < game.getShipMinDistance() / GUIController.pixelScale / 2) {
+                    gui.selectedOrbit = o;
                     camera.setFollowing(o);
+                    gui.uiState = GUIController.UI_STATE.ORBIT_SELECTED;
                     break;
                 }
             }

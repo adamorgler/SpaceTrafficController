@@ -96,11 +96,13 @@ public class GameController {
     }
 
     public void increaseStep() {
-        if (timeStepIndex < timeSteps.length - 1) timeStepIndex++;
+        if (timeStepIndex < timeSteps.length - 1 && !paused) timeStepIndex++;
+        if (paused) paused = false;
     }
 
     public void decreaseStep() {
-        if (timeStepIndex > 0) timeStepIndex--;
+        if (timeStepIndex > 0 && !paused) timeStepIndex--;
+        if (timeStepIndex == 0) paused = true;
     }
 
     private void sortOrbitsByAltitude() {

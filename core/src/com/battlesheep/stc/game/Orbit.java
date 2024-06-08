@@ -1,6 +1,7 @@
 package com.battlesheep.stc.game;
 
 import com.badlogic.gdx.math.Vector2;
+import com.sun.org.apache.bcel.internal.Const;
 
 public class Orbit {
 
@@ -18,8 +19,6 @@ public class Orbit {
         this.periapsis = periapsis;
         this.v = v;
         this.w = w;
-
-        selected = false;
     }
 
     public void step(float time) {
@@ -149,6 +148,18 @@ public class Orbit {
         return radiusFromFoci(a, e, v);
     }
 
+    public double getIntersectionRadiusAtA(double a) {
+        return getRadiusAtV(a - w);
+    }
+
+    public double[] getIntersectionCoordsFromA(double a) {
+        return Constants.getOrbitalPosition(apoapsis, periapsis, a - w, w);
+    }
+
+    public double[] getIntersectionCoordsFromV(double v) {
+        return Constants.getOrbitalPosition(apoapsis, periapsis, v, w);
+    }
+
     private double radiusFromFoci(double a, double e, double theta) {
         return (a * (1 - Math.pow(e, 2))) / (1 + e * Math.cos(Math.toRadians(theta)));
     }
@@ -173,13 +184,5 @@ public class Orbit {
 
     private double getVelocityY() {
         return getVelocityYAtV(v);
-    }
-
-    public boolean isSelected() {
-        return selected;
-    }
-
-    public void setSelected(boolean selected) {
-        this.selected = selected;
     }
 }

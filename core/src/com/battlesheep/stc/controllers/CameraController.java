@@ -3,6 +3,7 @@ package com.battlesheep.stc.controllers;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Vector3;
+import com.battlesheep.stc.game.Constants;
 import com.battlesheep.stc.game.Orbit;
 
 public class CameraController extends OrthographicCamera {
@@ -37,17 +38,16 @@ public class CameraController extends OrthographicCamera {
     }
 
     public static CameraController getInstance() {
-    if (instance == null) {
-        instance = new CameraController();
-    }
-    return instance;
+        if (instance == null) {
+            instance = new CameraController();
+        }
+        return instance;
     }
 
     public void updatePosition() {
-        GUIController gui = GUIController.getInstance();
         if (following != null) {
-            setxPos((float) (following.getXPos() / gui.getPixelScale()));
-            setyPos((float) (following.getYPos() / gui.getPixelScale()));
+            setxPos((float) (following.getXPos() / GUIController.pixelScale));
+            setyPos((float) (following.getYPos() / GUIController.pixelScale));
         }
     }
 
@@ -137,4 +137,19 @@ public class CameraController extends OrthographicCamera {
     }
     public boolean isFollowing() { return following != null; }
 
+    public Vector3 getCursorPosition() {
+        return unproject(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
+    }
+    public double[] getCursorPositionPolar() {
+        Vector3 cursorPos = getCursorPosition();
+        return Constants.cartesianToPolar(cursorPos.x, cursorPos.y);
+    }
+
+    public boolean cursorIntersectsOrbit(Orbit o) {
+        double[] cursorPosPolar = getCursorPositionPolar();
+        double r = cursorPosPolar[0];
+        double a = Math.toDegrees(cursorPosPolar[1]);
+        double intersectionRadius = o.getIntersectionRadiusAtA(a) / GUIController.pixelScale;
+        return intersectionRadius + GUIController.manueverNodeToolShowDistance > r && intersectionRadius - GUIController.manueverNodeToolShowDistance < r;
+    }
 }

@@ -47,4 +47,33 @@ public class Constants {
     public static double distanceBetween(Orbit o1, Orbit o2) {
         return distanceBetween(o1.getXPos(), o1.getYPos(), o2.getXPos(), o2.getYPos());
     }
+
+    public static double getOrbitalIntersectionRadiusFromA(Orbit o, double a) {
+        double w = o.getW();
+        return o.getRadiusAtV(a - w);
+    }
+
+    public static double[] getOrbitalPosition(Orbit o) {
+        double ap = o.getApoapsis();
+        double pe = o.getPeriapsis();
+        double v = o.getV();
+        double w = o.getW();
+        return getOrbitalPosition(ap, pe, v, w);
+    }
+
+    public static double[] getOrbitalPosition(double ap, double pe, double v, double w) {
+        // https://farside.ph.utexas.edu/teaching/celestial/Celestial/node30.html
+        double apogee = ap + Constants.getRadiusCentralBody();
+        double perigee = pe + Constants.getRadiusCentralBody();
+        double a = (float)(apogee + perigee) / 2; // semi-major axis
+        double b = Math.sqrt(apogee * perigee); // semi-minor axis
+        double e = Math.sqrt(1 - (Math.pow(b, 2) / Math.pow(a, 2))); // eccentricity
+        double r = radiusFromFoci(a, e, v);
+        double[] p = Constants.polarToCartesian(r, Math.toRadians(v) + Math.toRadians(w));
+        return p;
+    }
+
+    public static double radiusFromFoci(double a, double e, double theta) {
+        return (a * (1 - Math.pow(e, 2))) / (1 + e * Math.cos(Math.toRadians(theta)));
+    }
 }
